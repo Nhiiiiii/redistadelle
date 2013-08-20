@@ -1,0 +1,39 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+
+# Home page
+GET     /                      	controllers.Application.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.at(path="/public", file)
+
+###############
+# Webservices #
+###############
+
+# Infos (game state, scores etc...)
+GET		/game/score/:gameId				controllers.Rest.scores(gameId: Long)
+GET		/game/playersInfos/:gameId		controllers.Rest.playersInfos(gameId: Long)
+GET		/game/infos/:gameId				controllers.Rest.gameInfos(gameId: Long)
+GET		/player/score/:gameId/:playerId	controllers.Rest.score(gameId: Long, playerId: Long)
+GET		/player/infos/:gameId/:playerId controllers.Rest.playerInfos(gameId: Long, playerId: Long)
+
+# Player action
+POST	/init					controllers.Rest.init
+POST	/draw					controllers.Rest.draw
+POST	/selectCard				controllers.Rest.selectCard
+POST 	/build					controllers.Rest.build
+POST	/power/assassin/kill	controllers.Rest.assassinKill
+POST	/power/thief/stole		controllers.Rest.thiefStole
+POST	/power/wizard/switch	controllers.Rest.wizardSwitch
+POST	/power/wizard/stole		controllers.Rest.wizardStole
+POST	/power/trader/harvest	controllers.Rest.traderHarvest
+POST	/power/king/harvest		controllers.Rest.kingHarvest
+POST	/power/bishop/harvest	controllers.Rest.bishopHarvest
+POST	/power/warlord/harvest	controllers.Rest.warlordHarvest
+POST	/power/warlord/destroy	controllers.Rest.warlordDestroy
+POST	/endTurn				controllers.Rest.endTurn
+
+# Admin action
+POST		/initRedis			controllers.Rest.initRedis
+

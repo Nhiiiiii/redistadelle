@@ -1,0 +1,60 @@
+<!doctype html>
+<html ng-app>
+  <head>
+  	<title>Redistadelle</title>
+	<!-- Angular -->
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.0.7/angular-resource.min.js"></script>
+	
+	<!-- Bootstrap -->
+	<link href="@routes.Assets.at("bootstrap/css/bootstrap.min.css")" rel="stylesheet" media="screen">
+	<script src="@routes.Assets.at("bootstrap/js/bootstrap.min.js")"></script>
+	
+	<!-- Redistadelle -->
+	<script src="@routes.Assets.at("redistadelle/js/controllers/redistadelle.js")"></script>
+	<link rel="stylesheet" type="text/css" href="@routes.Assets.at("redistadelle/css/style.css")" />
+	
+  </head>
+  <body>
+  
+	<div class="container" ng-controller="RedistadelleCtrl">
+		<br>
+		
+
+		<div class="row">
+		
+			<div class="col-lg-12">
+				<div class="panel panel-primary">
+					<div class="panel-heading"><h4>{{player.num}} - {{player.name}} / {{player.job}} / Or {{player.gold}}</h4></div>
+					<div class="panel-body">
+						Main ({{player.hand.length}}) : {{player.hand}}<br>
+						Ville ({{player.city.length}}) : {{player.city}}
+					</div>
+				</div>
+			</div>
+		
+			<div class="col-lg-6" ng-repeat="otherPlayer in otherPlayers">
+				<div class="panel panel-info">
+					<div class="panel-heading"><h4>
+						{{otherPlayer.num}} - {{otherPlayer.name}} / {{otherPlayer.job}} / Or {{otherPlayer.gold}} / Main {{otherPlayer.hand.length}}
+					</h4></div>
+					<div class="panel-body">
+						Ville ({{otherPlayer.city.length}}) : {{otherPlayer.city}}
+					</div>
+				</div>
+			</div>
+			
+			<div class="col-lg-6">
+				<a ng-click="toto()">Test http get</a>
+				<p>status : {{status}}<br>
+				headers: {{headers}}<br>
+				config: {{config}}<br>
+				data : {{data}}</p>
+				<br>
+			</div>
+        </div>
+		
+	</div>
+   
+  </body>
+</html>
