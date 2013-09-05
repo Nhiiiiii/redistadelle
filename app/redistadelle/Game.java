@@ -27,7 +27,7 @@ public class Game {
 	
 	
 	public List<Player> getPlayers() {
-		List<Player> players = new ArrayList<>();
+		List<Player> players = new ArrayList<Player>();
 		Set<String> playerKeys = JEDIS.get().keys(key("player",id,"*"));
 		for(String playerKey : playerKeys) {
 			players.add(new Player(playerKey, playerKey, id));
