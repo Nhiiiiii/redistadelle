@@ -9,7 +9,7 @@ import domain.Player;
 public class Rest extends Controller {
 
 	 public static Result scores(Long gameId) {
-		 Player p = new Player("toto", "titi", "tyty");
+		 Player p = new Player("toto", "titi");
 		 return ok(Json.toJson(p));
 	 }
 

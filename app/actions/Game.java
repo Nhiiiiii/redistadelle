@@ -17,24 +17,72 @@ import domain.Job;
 import domain.Player;
 import domain.Power;
 
+/**
+ * Game mechanics.
+ * @author ni
+ *
+ */
 public class Game {
 
+	/**
+	 * Retrieve player data.
+	 * @param gameId the game id
+	 * @param playerId the player id
+	 * @return player's data
+	 */
+	public static Player getPlayer(String gameId, String playerId) {
+		Player player = new Player(gameId, playerId);
+		player.name = JEDIS.get().get(key("player","name",gameId,playerId));
+		player.gold = Long.parseLong(JEDIS.get().get(key("player","gold",gameId,playerId)));
+		return player;
+	}
+	
+	/**
+	 * Draw a card for a player.
+	 * @param gameId the game id
+	 * @param playerId the player id
+	 */
+    public void draw(String gameId, String playerId) {
+    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
+    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
+    }
+	
+    /**
+     * Get a player score.
+     * @param gameId the game id
+     * @param playerId the player id
+     * @return player's score
+     */
+	public Integer getScore(String gameId, String playerId) {
+        Integer result = 0;
+        Boolean hasLordly = false;
+        Boolean hasSacred = false;
+        Boolean hasShop = false;
+        Boolean hasMilitatry = false;
+        Set<String> city = JEDIS.get().smembers(key(gameId,playerId,"city"));
+        for (String districtKey : city) {
+            Map<String,String> district = JEDIS.get().hgetAll(key("district",districtKey));
+            result += Integer.valueOf(district.get("gold"));
+            hasLordly = hasLordly || Boolean.getBoolean(district.get("isLordly"));
+            hasSacred = hasSacred || Boolean.getBoolean(district.get("isSacred"));;
+            hasShop = hasShop || Boolean.getBoolean(district.get("isShop"));;
+            hasMilitatry = hasMilitatry || Boolean.getBoolean(district.get("isMilitatry"));;
+        }
+        if (hasLordly && hasSacred && hasShop && hasMilitatry) result++;
+        if (city.size() >= 8) result++;   
+        return result;
+    }
+	
 	private String id;
-	
-	
-	public Game(String id) {
-		this.id = id;
-	}
-	
-	
-	public List<Player> getPlayers() {
-		List<Player> players = new ArrayList<Player>();
-		Set<String> playerKeys = JEDIS.get().keys(key("player",id,"*"));
-		for(String playerKey : playerKeys) {
-			players.add(new Player(playerKey, playerKey, id));
-		}
-		return players;
-	}
+		
+//	public List<Player> getPlayers() {
+//		List<Player> players = new ArrayList<Player>();
+//		Set<String> playerKeys = JEDIS.get().keys(key("player",id,"*"));
+//		for(String playerKey : playerKeys) {
+//			players.add(new Player(playerKey, playerKey, id));
+//		}
+//		return players;
+//	}
 	
 	public void initGame() {
 		JEDIS.get().hset(key("game",id), "turn", "0");
