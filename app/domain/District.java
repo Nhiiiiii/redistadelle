@@ -1,4 +1,4 @@
-package redistadelle;
+package domain;
 
 
 public class District {

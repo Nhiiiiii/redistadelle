@@ -1,7 +1,7 @@
-package redistadelle;
+package domain;
 
-import static redistadelle.Redis.JEDIS;
-import static redistadelle.Utils.key;
+import static utils.Redis.JEDIS;
+import static utils.Utils.key;
 
 import java.util.List;
 import java.util.Map;

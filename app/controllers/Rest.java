@@ -1,13 +1,16 @@
 package controllers;
 
+import actions.GameAdmin;
 import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
+import domain.Player;
 
 public class Rest extends Controller {
 
 	 public static Result scores(Long gameId) {
-		 return ok(Json.toJson("TODO"));
+		 Player p = new Player("toto", "titi", "tyty");
+		 return ok(Json.toJson(p));
 	 }
 
 	 public static Result playersInfos(Long gameId) {
@@ -84,6 +87,7 @@ public class Rest extends Controller {
 	 }
 
 	 public static Result initRedis() {
-		 return ok(Json.toJson("TODO"));
+		 GameAdmin.initGameDatas();
+		 return ok(Json.toJson("OK"));
 	 }
 }

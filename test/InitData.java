@@ -1,5 +1,5 @@
-import redistadelle.GameAdmin;
-import redistadelle.Player;
+import actions.GameAdmin;
+import domain.Player;
 
 public class InitData {
 

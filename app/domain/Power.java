@@ -1,4 +1,4 @@
-package redistadelle;
+package domain;
 
 public enum Power {
     ASSASSIN_KILL,

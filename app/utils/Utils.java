@@ -1,4 +1,4 @@
-package redistadelle;
+package utils;
 
 public class Utils {
 

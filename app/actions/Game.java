@@ -1,7 +1,7 @@
-package redistadelle;
+package actions;
 
-import static redistadelle.Redis.JEDIS;
-import static redistadelle.Utils.key;
+import static utils.Redis.JEDIS;
+import static utils.Utils.key;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,11 +10,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-
-import play.libs.Json;
-
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Tuple;
+import domain.District;
+import domain.Job;
+import domain.Player;
+import domain.Power;
 
 public class Game {
 
