@@ -6,6 +6,11 @@ import play.libs.Json;
 import play.mvc.Controller;
 import play.mvc.Result;
 
+/**
+ * Rest controller.
+ * @author ni
+ *
+ */
 public class Rest extends Controller {
 
 	 /**
