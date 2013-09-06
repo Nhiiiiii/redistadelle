@@ -1,4 +1,4 @@
-package domain;
+package citadelles.domain;
 
 public enum Job {
     ASSASSIN,
@@ -8,5 +8,7 @@ public enum Job {
     BISHOP,
     TRADER,
     ARCHITECT,
-    WARLORD;
+    WARLORD,
+    NONE;
+
 }

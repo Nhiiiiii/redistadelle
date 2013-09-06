@@ -1,4 +1,4 @@
-package domain;
+package citadelles.domain;
 
 public enum Power {
     ASSASSIN_KILL,

@@ -1,5 +1,7 @@
 package utils;
 
+import static utils.Redis.JEDIS;
+
 public class Utils {
 
 	public static String key(String... ids) {

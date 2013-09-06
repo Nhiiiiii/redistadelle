@@ -1,21 +1,21 @@
-package actions;
+package citadelles;
 
 import static utils.Redis.JEDIS;
 import static utils.Utils.key;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import redis.clients.jedis.Jedis;
+import citadelles.domain.Job;
+import citadelles.domain.Player;
+import citadelles.domain.Power;
+
+import redis.clients.jedis.Response;
+import redis.clients.jedis.Transaction;
 import redis.clients.jedis.Tuple;
-import domain.District;
-import domain.Job;
-import domain.Player;
-import domain.Power;
 
 /**
  * Game mechanics.
@@ -31,9 +31,19 @@ public class Game {
 	 * @return player's data
 	 */
 	public static Player getPlayer(String gameId, String playerId) {
-		Player player = new Player(gameId, playerId);
-		player.name = JEDIS.get().get(key("player","name",gameId,playerId));
-		player.gold = Long.parseLong(JEDIS.get().get(key("player","gold",gameId,playerId)));
+		Player player = new Player();
+		
+		Map<String,String> playerMap = JEDIS.get().hgetAll(key("player",gameId,playerId));
+		if (!playerMap.isEmpty()) {
+			player.num = Long.parseLong(playerMap.get("num"));
+			player.name = playerMap.get("name");
+			player.gold = Long.parseLong(playerMap.get("gold"));
+			player.isAlive = "1".equals(playerMap.get("isAlive"));
+			player.isStolen = "1".equals(playerMap.get("isStolen"));
+			player.job = Job.valueOf(playerMap.get("job").toUpperCase());
+			player.score = score(gameId, playerId);
+			player.city = new ArrayList<String>(JEDIS.get().smembers(key("city",gameId,playerId)));
+		}		
 		return player;
 	}
 	
@@ -53,26 +63,72 @@ public class Game {
      * @param playerId the player id
      * @return player's score
      */
-	public Integer getScore(String gameId, String playerId) {
-        Integer result = 0;
+	private static Long score(String gameId, String playerId) {
+        Long result = 0L;
         Boolean hasLordly = false;
         Boolean hasSacred = false;
         Boolean hasShop = false;
         Boolean hasMilitatry = false;
-        Set<String> city = JEDIS.get().smembers(key(gameId,playerId,"city"));
+        Set<String> city = JEDIS.get().smembers(key("city",gameId,playerId));
         for (String districtKey : city) {
             Map<String,String> district = JEDIS.get().hgetAll(key("district",districtKey));
-            result += Integer.valueOf(district.get("gold"));
-            hasLordly = hasLordly || Boolean.getBoolean(district.get("isLordly"));
-            hasSacred = hasSacred || Boolean.getBoolean(district.get("isSacred"));;
-            hasShop = hasShop || Boolean.getBoolean(district.get("isShop"));;
-            hasMilitatry = hasMilitatry || Boolean.getBoolean(district.get("isMilitatry"));;
+            result += Long.valueOf(district.get("vp"));
+            hasLordly = hasLordly || "lordy".equals(district.get("t"));
+            hasSacred = hasSacred || "sacred".equals(district.get("t"));
+            hasShop = hasShop || "shop".equals(district.get("t"));
+            hasMilitatry = hasMilitatry || "military".equals(district.get("t"));
         }
         if (hasLordly && hasSacred && hasShop && hasMilitatry) result++;
         if (city.size() >= 8) result++;   
         return result;
     }
 	
+	   /** Increment gold value. */
+    public static Long incrGold(String gameId, String playerId, Long value) {
+        return JEDIS.get().hincrBy(key(gameId, playerId), "gold", value);
+    }
+    
+    // TODO LUA script
+    public void construct(String gameId, String playerId, String districtKey) { 
+        
+        Double nbDistrict = JEDIS.get().zscore(key(gameId,playerId,"hand"),districtKey);
+        if (nbDistrict == null || nbDistrict <= 0) {
+            return;
+        }
+        
+        Map<String,String> district = JEDIS.get().hgetAll(key("district",districtKey));
+        Integer cost = Integer.valueOf(district.get("gold"));
+        Integer gold = Integer.valueOf(JEDIS.get().hget(key("player",gameId,playerId),"gold"));
+        if (cost > gold) return;
+        
+        if (JEDIS.get().sismember(key(gameId,playerId,"city"), districtKey)) return;
+        
+        JEDIS.get().hincrBy(key(gameId,playerId),"gold", -cost);
+        JEDIS.get().zincrby(key(gameId,playerId,"hand"),-1,districtKey);
+        Long citySize = JEDIS.get().sadd(key(gameId,playerId,"city"), districtKey);
+        if(citySize >= 8) {
+        	JEDIS.get().hset(key("player", gameId, playerId), "canBeDestroy" ,"0");
+        }
+    }
+
+    
+
+    
+    public Boolean choosePartialDraw(String gameId, String playerId, String districtKey) {
+        Transaction t = JEDIS.get().multi();
+        Response<List<String>> result = t.lrange(key(gameId,playerId,"pile"), 0, -1);
+        t.del(key(gameId,playerId,"pile"));
+        t.exec();
+        for(String key : result.get()) {
+            if(key.equals(districtKey)) {
+            	JEDIS.get().zincrby(key(gameId,playerId,"hand"),1,key);
+                return true;
+            }
+        }
+        JEDIS.get().lpush(key(gameId,playerId,"pile"), (String[]) result.get().toArray());
+        return false;
+    }
+    
 	private String id;
 		
 //	public List<Player> getPlayers() {
@@ -118,20 +174,15 @@ public class Game {
 	
 	
 	
-    private List<Player> players;
-    private List<District> pile;
-    private Integer turn = 0;
-    private Integer firstPlayer = 0;
-    private Integer activePlayer = 0;
-    private EnumSet<Job> availableJob;
+  
 
     
-    public Game(List<Player> players, List<District> pile) {
-    	Jedis jedis = new Jedis("localhost");
-        this.players = new ArrayList<Player>(players);
-        this.pile = new ArrayList<District>(pile);
-        this.availableJob = EnumSet.allOf(Job.class);
-    }
+//    public Game(List<Player> players, List<District> pile) {
+//    	Jedis jedis = new Jedis("localhost");
+//        this.players = new ArrayList<Player>(players);
+//        this.pile = new ArrayList<District>(pile);
+//        this.availableJob = EnumSet.allOf(Job.class);
+//    }
     
     
     public List<Map<String,String>> getPlayerInfos() {
@@ -154,9 +205,6 @@ public class Game {
 //        }
 //    }
     
-    public Player getActivePlayer() {
-        return players.get(activePlayer);
-    }
     
     public void takeJob(Player player, Job job) {
 //        if(!availableJob.contains(job)) return;
@@ -189,7 +237,7 @@ public class Game {
 //        availableJob.remove(job);
     }
 
-    public void playAbility(Power power, Player player, Player target, District targetDistrict) {
+    public void playAbility(Power power, Player player, Player target, String targetDistrict) {
 //        if (!player.powers.contains(power)) return;
 //        switch (power) {
 //            case ASSASSIN_KILL:

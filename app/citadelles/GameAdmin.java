@@ -1,4 +1,4 @@
-package actions;
+package citadelles;
 
 import java.util.Map;
 
@@ -36,30 +36,30 @@ public class GameAdmin {
 
 	private static void initDistricts() {
 		// Religieux
-		Map<String, String> temple = ImmutableMap.of("g", "1", "vp", "1");
-		Map<String, String> eglise = ImmutableMap.of("g", "2", "vp", "1");
-		Map<String, String> monastere = ImmutableMap.of("g", "3", "vp", "1");
-		Map<String, String> cathedrale = ImmutableMap.of("g", "5", "vp", "1");
+		Map<String, String> temple = ImmutableMap.of("g", "1", "vp", "1", "t", "sacred");
+		Map<String, String> eglise = ImmutableMap.of("g", "2", "vp", "1", "t", "sacred");
+		Map<String, String> monastere = ImmutableMap.of("g", "3", "vp", "1", "t", "sacred");
+		Map<String, String> cathedrale = ImmutableMap.of("g", "5", "vp", "1", "t", "sacred");
 		JEDIS.get().hmset(key("district", "temple"), temple);
 		JEDIS.get().hmset(key("district", "eglise"), eglise);
 		JEDIS.get().hmset(key("district", "monastere"), monastere);
 		JEDIS.get().hmset(key("district", "cathedrale"), cathedrale);
 
 		// Nobles
-		Map<String, String> manoir = ImmutableMap.of("g", "3", "vp", "3");
-		Map<String, String> chateau = ImmutableMap.of("g", "4", "vp", "4");
-		Map<String, String> palais = ImmutableMap.of("g", "5", "vp", "5");
+		Map<String, String> manoir = ImmutableMap.of("g", "3", "vp", "3", "t", "lordy");
+		Map<String, String> chateau = ImmutableMap.of("g", "4", "vp", "4", "t", "lordy");
+		Map<String, String> palais = ImmutableMap.of("g", "5", "vp", "5", "t", "lordy");
 		JEDIS.get().hmset(key("district", "manoir"), manoir);
 		JEDIS.get().hmset(key("district", "chateau"), chateau);
 		JEDIS.get().hmset(key("district", "palais"), palais);
 
 		// Commerces
-		Map<String, String> taverne = ImmutableMap.of("g", "1", "vp", "1");
-		Map<String, String> echoppe = ImmutableMap.of("g", "2", "vp", "2");
-		Map<String, String> marche = ImmutableMap.of("g", "2", "vp", "2");
-		Map<String, String> comptoir = ImmutableMap.of("g", "3", "vp", "3");
-		Map<String, String> port = ImmutableMap.of("g", "4", "vp", "4");
-		Map<String, String> hoteldeville = ImmutableMap.of("g", "5", "vp", "5");
+		Map<String, String> taverne = ImmutableMap.of("g", "1", "vp", "1", "t", "shop");
+		Map<String, String> echoppe = ImmutableMap.of("g", "2", "vp", "2", "t", "shop");
+		Map<String, String> marche = ImmutableMap.of("g", "2", "vp", "2", "t", "shop");
+		Map<String, String> comptoir = ImmutableMap.of("g", "3", "vp", "3", "t", "shop");
+		Map<String, String> port = ImmutableMap.of("g", "4", "vp", "4", "t", "shop");
+		Map<String, String> hoteldeville = ImmutableMap.of("g", "5", "vp", "5", "t", "shop");
 		JEDIS.get().hmset(key("district", "taverne"), taverne);
 		JEDIS.get().hmset(key("district", "echoppe"), echoppe);
 		JEDIS.get().hmset(key("district", "marche"), marche);
@@ -68,27 +68,26 @@ public class GameAdmin {
 		JEDIS.get().hmset(key("district", "hoteldeville"), hoteldeville);
 
 		// Militaires
-		Map<String, String> tourDeGuet = ImmutableMap.of("g", "1", "vp", "1");
-		Map<String, String> prison = ImmutableMap.of("g", "2", "vp", "2");
-		Map<String, String> caserne = ImmutableMap.of("g", "3", "vp", "3");
-		Map<String, String> forteresse = ImmutableMap.of("g", "5", "vp", "5");
+		Map<String, String> tourDeGuet = ImmutableMap.of("g", "1", "vp", "1", "t", "military");
+		Map<String, String> prison = ImmutableMap.of("g", "2", "vp", "2", "t", "military");
+		Map<String, String> caserne = ImmutableMap.of("g", "3", "vp", "3", "t", "military");
+		Map<String, String> forteresse = ImmutableMap.of("g", "5", "vp", "5", "t", "military");
 		JEDIS.get().hmset(key("district", "tourdeguet"), tourDeGuet);
 		JEDIS.get().hmset(key("district", "prison"), prison);
 		JEDIS.get().hmset(key("district", "caserne"), caserne);
 		JEDIS.get().hmset(key("district", "forteresse"), forteresse);
 
 		// Merveilles
-		Map<String, String> courDesMiracles = ImmutableMap.of("g", "2", "vp",
-				"2");
-		Map<String, String> donjon = ImmutableMap.of("g", "3", "vp", "3");
-		Map<String, String> laboratoire = ImmutableMap.of("g", "5", "vp", "5");
-		Map<String, String> manufacture = ImmutableMap.of("g", "5", "vp", "5");
-		Map<String, String> observatoire = ImmutableMap.of("g", "5", "vp", "5");
-		Map<String, String> cimetiere = ImmutableMap.of("g", "5", "vp", "5");
-		Map<String, String> bibliotheque = ImmutableMap.of("g", "6", "vp", "6");
-		Map<String, String> ecoleDeMagie = ImmutableMap.of("g", "6", "vp", "6");
-		Map<String, String> universite = ImmutableMap.of("g", "6", "vp", "8");
-		Map<String, String> dracoport = ImmutableMap.of("g", "6", "vp", "8");
+		Map<String, String> courDesMiracles = ImmutableMap.of("g", "2", "vp","2", "t", "wonder");
+		Map<String, String> donjon = ImmutableMap.of("g", "3", "vp", "3", "t", "wonder");
+		Map<String, String> laboratoire = ImmutableMap.of("g", "5", "vp", "5", "t", "wonder");
+		Map<String, String> manufacture = ImmutableMap.of("g", "5", "vp", "5", "t", "wonder");
+		Map<String, String> observatoire = ImmutableMap.of("g", "5", "vp", "5", "t", "wonder");
+		Map<String, String> cimetiere = ImmutableMap.of("g", "5", "vp", "5", "t", "wonder");
+		Map<String, String> bibliotheque = ImmutableMap.of("g", "6", "vp", "6", "t", "wonder");
+		Map<String, String> ecoleDeMagie = ImmutableMap.of("g", "6", "vp", "6", "t", "wonder");
+		Map<String, String> universite = ImmutableMap.of("g", "6", "vp", "8", "t", "wonder");
+		Map<String, String> dracoport = ImmutableMap.of("g", "6", "vp", "8", "t", "wonder");
 		JEDIS.get().hmset(key("district", "courDesMiracles"), courDesMiracles);
 		JEDIS.get().hmset(key("district", "donjon"), donjon);
 		JEDIS.get().hmset(key("district", "laboratoire"), laboratoire);
@@ -142,6 +141,7 @@ public class GameAdmin {
 		JEDIS.get().zadd("job", new Double(6), "trader");
 		JEDIS.get().zadd("job", new Double(7), "architect");
 		JEDIS.get().zadd("job", new Double(8), "warlord");
+		JEDIS.get().zadd("job", new Double(8), "none");
 	}
 
 }
