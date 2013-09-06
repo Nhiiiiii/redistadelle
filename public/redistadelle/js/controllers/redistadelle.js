@@ -11,7 +11,7 @@ function RedistadelleCtrl($scope, $http) {
 		{"num":7, "name":"tztz", "gold":0,"job":"architecte","hand":["port","taverne"],"city":["port","taverne"]},
 		{"num":8, "name":"Obiwan", "gold":3,"job":"condotiere","hand":["port","taverne"],"city":["port","taverne"]}];
 	
-	$scope.player = {"num": 1, "name":"tata", "gold":2, "job": "voleur", "hand": ["port","taverne"], "city": ["caserne","draco-port"]};
+	
 	
 	$scope.toto = function() {
 		$http({method: 'GET', url: $scope.url}).
@@ -31,4 +31,6 @@ function RedistadelleCtrl($scope, $http) {
 			});
 	};
 
+	$scope.player = $scope.toto();
+	
 }

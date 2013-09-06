@@ -32,7 +32,6 @@ public class Game {
 	 */
 	public static Player getPlayer(String gameId, String playerId) {
 		Player player = new Player();
-		
 		Map<String,String> playerMap = JEDIS.get().hgetAll(key("player",gameId,playerId));
 		if (!playerMap.isEmpty()) {
 			player.num = Long.parseLong(playerMap.get("num"));
@@ -140,37 +139,7 @@ public class Game {
 //		return players;
 //	}
 	
-	public void initGame() {
-		JEDIS.get().hset(key("game",id), "turn", "0");
-		createPile();
-		setPlayerOrder();
-	}
-	
-	
-	
-	/** Create a pile for this game. */
-	private void createPile(){
-		List<String> gameDeck = new ArrayList<String>();
-		Set<Tuple> deck = JEDIS.get().zrangeWithScores("deck", 0, -1);
-		for (Tuple tuple : deck) {
-			for(int i=0; i<tuple.getScore();i++) {
-				gameDeck.add(tuple.getElement());
-			}
-		}
-		Collections.shuffle(gameDeck);
-		for(String value :gameDeck){
-			JEDIS.get().lpush(key("pile",id),value);
-		}
-	}
-	
 
-	public void setPlayerOrder() {
-		String turn = JEDIS.get().hget(key("game",id), "turn");
-		Set<String> players = JEDIS.get().keys(key("player",id,"*"));
-		for (String playerId : players) {
-			JEDIS.get().lpush(key("order", id), playerId);
-		}
-	}
 	
 	
 	

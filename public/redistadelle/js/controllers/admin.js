@@ -1,0 +1,3 @@
+function AdminCtrl($scope, $http) {
+
+}

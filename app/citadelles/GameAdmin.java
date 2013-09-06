@@ -1,9 +1,15 @@
 package citadelles;
 
-import java.util.Map;
-
 import static utils.Redis.JEDIS;
 import static utils.Utils.key;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import redis.clients.jedis.Tuple;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -14,19 +20,41 @@ public class GameAdmin {
 		JEDIS.get().hset(key("player", gameId, playerId), "gold", "4");
 		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
 		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeStolen", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeDestroy", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeKill", "1");
 	}
 
-	public void initPlayerTurn(String gameId, String playerId) {
+	public static void initPlayerTurn(String gameId, String playerId) {
 		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
 		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeStolen", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeDestroy", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "canBeKill", "1");
 	}
 
+	public static void initGame(String gameId) {
+		JEDIS.get().hset(key("game",gameId), "turn", "0");
+		createPile(gameId);
+		setPlayerOrder(gameId);
+	}
+
+	public static void setPlayerOrder(String gameId) {
+		String turn = JEDIS.get().hget(key("game",gameId), "turn");
+		Set<String> players = JEDIS.get().keys(key("player",gameId,"*"));
+		for (String playerId : players) {
+			JEDIS.get().lpush(key("order", gameId), playerId);
+		}
+	}
+	
+	/** Create a pile for a game. */
+	public static void createPile(String gameId){
+		List<String> gameDeck = new ArrayList<String>();
+		Set<Tuple> deck = JEDIS.get().zrangeWithScores("deck", 0, -1);
+		for (Tuple tuple : deck) {
+			for(int i=0; i<tuple.getScore();i++) {
+				gameDeck.add(tuple.getElement());
+			}
+		}
+		Collections.shuffle(gameDeck);
+		for(String value :gameDeck){
+			JEDIS.get().lpush(key("pile",gameId),value);
+		}
+	}
 	public static void initGameDatas() {
 		JEDIS.get().flushAll();
 		initDistricts();
