@@ -1,0 +1,30 @@
+@(form: Form[Application.Login])
+<!doctype html>
+<html>
+    <head>
+        <title>Redistadelle login</title>
+    	
+    	<!-- Bootstrap -->
+		<link href="@routes.Assets.at("bootstrap/css/bootstrap.min.css")" rel="stylesheet" media="screen">
+		<script src="@routes.Assets.at("bootstrap/js/bootstrap.min.js")"></script>
+	
+		<!-- Redistadelle -->
+		<script src="@routes.Assets.at("redistadelle/js/controllers/admin.js")"></script>
+		<link href="@routes.Assets.at("redistadelle/css/style.css")" rel="stylesheet" type="text/css" />
+	</head>
+    <body>
+    
+           @helper.form(routes.Application.authenticate) {
+            
+            <h1>Authentication</h1>
+            
+            <p>
+        		Name : <input type="text" name="playerId" value="@form("playerId").value"/>
+        		<button type="submit">Login</button>
+            </p>
+            
+        }
+
+            
+    </body>
+</html>
