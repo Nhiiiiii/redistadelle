@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import redis.clients.jedis.Response;
-import redis.clients.jedis.Transaction;
+import com.google.common.collect.ImmutableMap;
+
 import citadelles.domain.Job;
 import citadelles.domain.Player;
 import citadelles.domain.Power;
@@ -56,17 +56,6 @@ public class Game {
 		return result;
 	}
 	
-	
-	/**
-	 * Draw a card for a player.
-	 * @param gameId the game id
-	 * @param playerId the player id
-	 */
-    public void draw(String gameId, String playerId) {
-    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
-    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
-    }
-	
     /**
      * Get a player score.
      * @param gameId the game id
@@ -93,68 +82,87 @@ public class Game {
         return result;
     }
 	
-	   /** Increment gold value. */
-    public static Long incrGold(String gameId, String playerId, Long value) {
-        return JEDIS.get().hincrBy(key(gameId, playerId), "gold", value);
-    }
-    
-    // TODO LUA script
-    public void construct(String gameId, String playerId, String districtKey) { 
-        
-        Double nbDistrict = JEDIS.get().zscore(key(gameId,playerId,"hand"),districtKey);
-        if (nbDistrict == null || nbDistrict <= 0) {
-            return;
-        }
-        
-        Map<String,String> district = JEDIS.get().hgetAll(key("district",districtKey));
-        Integer cost = Integer.valueOf(district.get("gold"));
-        Integer gold = Integer.valueOf(JEDIS.get().hget(key("player",gameId,playerId),"gold"));
-        if (cost > gold) return;
-        
-        if (JEDIS.get().sismember(key(gameId,playerId,"city"), districtKey)) return;
-        
-        JEDIS.get().hincrBy(key(gameId,playerId),"gold", -cost);
-        JEDIS.get().zincrby(key(gameId,playerId,"hand"),-1,districtKey);
-        Long citySize = JEDIS.get().sadd(key(gameId,playerId,"city"), districtKey);
-        if(citySize >= 8) {
-        	JEDIS.get().hset(key("player", gameId, playerId), "canBeDestroy" ,"0");
-        }
-    }
-
-    
-
-    
-    public Boolean choosePartialDraw(String gameId, String playerId, String districtKey) {
-        Transaction t = JEDIS.get().multi();
-        Response<List<String>> result = t.lrange(key(gameId,playerId,"pile"), 0, -1);
-        t.del(key(gameId,playerId,"pile"));
-        t.exec();
-        for(String key : result.get()) {
-            if(key.equals(districtKey)) {
-            	JEDIS.get().zincrby(key(gameId,playerId,"hand"),1,key);
-                return true;
-            }
-        }
-        JEDIS.get().lpush(key(gameId,playerId,"pile"), (String[]) result.get().toArray());
-        return false;
-    }
-    
-	private String id;
-		
-//	public List<Player> getPlayers() {
-//		List<Player> players = new ArrayList<Player>();
-//		Set<String> playerKeys = JEDIS.get().keys(key("player",id,"*"));
-//		for(String playerKey : playerKeys) {
-//			players.add(new Player(playerKey, playerKey, id));
-//		}
-//		return players;
-//	}
+	/**
+	 * Kill a person in a game.
+	 * @param gameId the game id
+	 * @param job the person job
+	 */
+	public static void kill(String gameId, String job) {
+		String playerId = JEDIS.get().get(key("job",gameId,job));
+		if(playerId != null) {
+			JEDIS.get().hmset(key("player",gameId,playerId), ImmutableMap.of("isAlive","0"));
+		}
+	}
 	
-
+	/**
+	 * Stole a person in a game.
+	 * @param gameId the game id
+	 * @param job the person job
+	 */
+	public static void stole(String gameId, String job) {
+		String playerId = JEDIS.get().get(key("job",gameId,job));
+		if(playerId != null) {
+			JEDIS.get().hmset(key("player",gameId,playerId), ImmutableMap.of("isStolen","1"));
+		}
+	}
 	
 	
-	
-  
+//	/**
+//	 * Draw a card for a player.
+//	 * @param gameId the game id
+//	 * @param playerId the player id
+//	 */
+//    public void draw(String gameId, String playerId) {
+//    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
+//    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
+//    }
+//    
+//	   /** Increment gold value. */
+//    public static Long incrGold(String gameId, String playerId, Long value) {
+//        return JEDIS.get().hincrBy(key(gameId, playerId), "gold", value);
+//    }
+//    
+//    // TODO LUA script
+//    public void construct(String gameId, String playerId, String districtKey) { 
+//        
+//        Double nbDistrict = JEDIS.get().zscore(key(gameId,playerId,"hand"),districtKey);
+//        if (nbDistrict == null || nbDistrict <= 0) {
+//            return;
+//        }
+//        
+//        Map<String,String> district = JEDIS.get().hgetAll(key("district",districtKey));
+//        Integer cost = Integer.valueOf(district.get("gold"));
+//        Integer gold = Integer.valueOf(JEDIS.get().hget(key("player",gameId,playerId),"gold"));
+//        if (cost > gold) return;
+//        
+//        if (JEDIS.get().sismember(key(gameId,playerId,"city"), districtKey)) return;
+//        
+//        JEDIS.get().hincrBy(key(gameId,playerId),"gold", -cost);
+//        JEDIS.get().zincrby(key(gameId,playerId,"hand"),-1,districtKey);
+//        Long citySize = JEDIS.get().sadd(key(gameId,playerId,"city"), districtKey);
+//        if(citySize >= 8) {
+//        	JEDIS.get().hset(key("player", gameId, playerId), "canBeDestroy" ,"0");
+//        }
+//    }
+//
+//    
+//
+//    
+//    public Boolean choosePartialDraw(String gameId, String playerId, String districtKey) {
+//        Transaction t = JEDIS.get().multi();
+//        Response<List<String>> result = t.lrange(key(gameId,playerId,"pile"), 0, -1);
+//        t.del(key(gameId,playerId,"pile"));
+//        t.exec();
+//        for(String key : result.get()) {
+//            if(key.equals(districtKey)) {
+//            	JEDIS.get().zincrby(key(gameId,playerId,"hand"),1,key);
+//                return true;
+//            }
+//        }
+//        JEDIS.get().lpush(key(gameId,playerId,"pile"), (String[]) result.get().toArray());
+//        return false;
+//    }
+//    
 
     
 //    public Game(List<Player> players, List<District> pile) {
@@ -163,17 +171,7 @@ public class Game {
 //        this.pile = new ArrayList<District>(pile);
 //        this.availableJob = EnumSet.allOf(Job.class);
 //    }
-    
-    
-    public List<Map<String,String>> getPlayerInfos() {
-    	List<Map<String,String>> playersInfos = new ArrayList<Map<String,String>>();
-    	for (String player : JEDIS.get().keys(key("player", id, "*"))) {
-    		playersInfos.add(JEDIS.get().hgetAll(player));
-    	}
-    	return playersInfos;
-    }
-    
-    
+	
 //    public void initTurn() {
 //        this.availableJob = EnumSet.allOf(Job.class);
 //        for(int i=0; i<=players.size(); i++) {

@@ -14,5 +14,5 @@ public class Player {
     public Long score;
     public Boolean isAlive;
     public Boolean isStolen;
-   
+
 }

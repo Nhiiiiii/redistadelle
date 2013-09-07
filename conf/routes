@@ -1,46 +1,35 @@
 # Routes
 # This file defines all application routes (Higher priority routes first)
 
+###############
+# Application #
+###############
+
 # Auth page
 GET     /                      	controllers.Application.index
-POST    /                       controllers.Application.authenticate
+POST    /                       controllers.Application.login
+GET     /logout                 controllers.Application.logout
+
 # Game page
 GET		/redistadelle			controllers.Application.redistadelle
+
 # Admin page
 GET		/admin					controllers.Application.admin
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /assets/*file           controllers.Assets.at(path="/public", file)
 
 ###############
 # Webservices #
 ###############
 
-# Infos (game state, player info, scores etc...)
-GET		/player/:gameId/:playerId 		controllers.Rest.player(gameId: String, playerId: String)
-
-#GET		/game/score/:gameId				controllers.Rest.scores(gameId: Long)
-#GET		/game/playersInfos/:gameId		controllers.Rest.playersInfos(gameId: Long)
-#GET		/game/infos/:gameId				controllers.Rest.gameInfos(gameId: Long)
-#GET		/player/score/:gameId/:playerId	controllers.Rest.score(gameId: Long, playerId: Long)
-#GET		/player/infos/:gameId/:playerId controllers.Rest.playerInfos(gameId: Long, playerId: Long)
+# Retrieve player data
+GET		/players/:gameId		controllers.Rest.players(gameId: String)
 
 # Player action
-#POST	/init					controllers.Rest.init
-#POST	/draw					controllers.Rest.draw
-#POST	/selectCard				controllers.Rest.selectCard
-#POST 	/build					controllers.Rest.build
-#POST	/power/assassin/kill	controllers.Rest.assassinKill
-#POST	/power/thief/stole		controllers.Rest.thiefStole
-#POST	/power/wizard/switch	controllers.Rest.wizardSwitch
-#POST	/power/wizard/stole		controllers.Rest.wizardStole
-#POST	/power/trader/harvest	controllers.Rest.traderHarvest
-#POST	/power/king/harvest		controllers.Rest.kingHarvest
-#POST	/power/bishop/harvest	controllers.Rest.bishopHarvest
-#POST	/power/warlord/harvest	controllers.Rest.warlordHarvest
-#POST	/power/warlord/destroy	controllers.Rest.warlordDestroy
-#POST	/endTurn				controllers.Rest.endTurn
+POST	/kill/:gameId/:job		controllers.Rest.kill(gameId: String, job: String)
+POST	/stole/:gameId/:job		controllers.Rest.stole(gameId: String, job: String)
 
 # Admin action
-#POST		/initRedis			controllers.Rest.initRedis
+POST		/initRedis			controllers.Rest.initRedis
 

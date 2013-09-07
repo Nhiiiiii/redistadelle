@@ -17,9 +17,15 @@
   </head>
   <body>
   
-	<div class="container" ng-controller="RedistadelleCtrl">
-		<br>
-		
+  	<header class="navbar navbar-inverse navbar-fixed-top">
+  		<ul class="nav navbar-nav navbar-right">
+      		<li><a href="@routes.Application.logout()">Logout</a></li>
+      	</ul>
+	</header>
+	
+	<br><br><br>
+	
+	<div class="container" ng-controller="RedistadelleCtrl">	
 
 		<div class="row">
 		
@@ -28,7 +34,20 @@
 					<div class="panel-heading"><h4>{{player.num}} - {{player.name}} / {{player.job}} / Or {{player.gold}}</h4></div>
 					<div class="panel-body">
 						Main ({{player.hand.length}}) : {{player.hand}}<br>
-						Ville ({{player.city.length}}) : {{player.city}}
+						Ville ({{player.city.length}}) : {{player.city}}<br>
+						<a href="#" class="btn btn-default">Piocher</a> Ou <a href="#" class="btn btn-default">Recolter</a><br>
+						<select ng-model="selected" ng-show="player.job == 'ASSASSIN' || player.job=='THIEF'">
+							<option value="THIEF" ng-show="player.job == 'ASSASSIN'">Voleur</option>
+							<option value="WIZARD">Magicien</option>
+							<option value="KING">Roi</option>
+							<option value="BISHOP">Eveque</option>
+							<option value="TRADER">Marchand</option>
+							<option value="ARCHITECT">Architecte</option>
+							<option value="WARLORD">Condotiere</option>
+						</select>
+						<a href="#" ng-click="kill()" ng-show="player.job == 'ASSASSIN'" class="btn btn-default">Assassiner</a>
+						<a href="#" ng-click="stole()" ng-show="player.job == 'THIEF'" class="btn btn-default">Voler</a><br>
+							
 					</div>
 				</div>
 			</div>
@@ -43,15 +62,7 @@
 					</div>
 				</div>
 			</div>
-			
-			<div class="col-lg-6">
-				<a ng-click="toto()">Test http get</a>
-				<p>status : {{status}}<br>
-				headers: {{headers}}<br>
-				config: {{config}}<br>
-				data : {{data}}</p>
-				<br>
-			</div>
+
         </div>
 		
 	</div>

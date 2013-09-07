@@ -1,14 +1,12 @@
 package controllers;
 
+import static play.data.Form.form;
+import play.data.Form;
 import play.mvc.Controller;
-import play.mvc.Http.Context;
 import play.mvc.Result;
-import play.data.*;
 import views.html.admin;
 import views.html.index;
 import views.html.redistadelle;
-
-import static play.data.Form.*;
 
 /**
  * Application pages controller.
@@ -23,13 +21,14 @@ public class Application extends Controller {
 	
 	/** Index/Login page */
 	public static Result index() {
-		if(Context.current().session().get("playerId").isEmpty()) {
+		if(session("playerId") == null || session("playerId").isEmpty()) {
 			return ok(index.render(form(Login.class)));
 		}
 		return redirect(routes.Application.redistadelle());
 	}
 	
-    public static Result authenticate() {
+	/** Login */
+    public static Result login() {
         Form<Login> loginForm = form(Login.class).bindFromRequest();
         if(!loginForm.get().playerId.isEmpty()) {
         	 session("playerId", loginForm.get().playerId);
@@ -37,6 +36,12 @@ public class Application extends Controller {
         }
         return badRequest(index.render(loginForm));
         
+    }
+    
+    /** Logout */
+    public static Result logout() {
+    	session().clear();
+    	return redirect(routes.Application.index());
     }
 	
 	/** Game page */

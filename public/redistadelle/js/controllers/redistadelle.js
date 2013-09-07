@@ -1,36 +1,48 @@
 function RedistadelleCtrl($scope, $http) {
-	$scope.url="/player/1/1";
-
 	$http.defaults.useXDomain = true;
-	$scope.otherPlayers = [
-		{"num":2, "name":"tete", "gold":2,"job":"assassin","hand":["port","taverne"],"city":["port","taverne"]},
-		{"num":3, "name":"titi", "gold":0,"job":"magicien","hand":["port","taverne"],"city":["port","taverne"]},
-		{"num":4, "name":"toto", "gold":5,"job":"marchand","hand":["port","taverne"],"city":["port","taverne"]},
-		{"num":5, "name":"tutu", "gold":6, "job": "roi", "hand": ["port","taverne"], "city": ["port","taverne"]},
-		{"num":6, "name":"tyty", "gold":1,"job":"eveque","hand":["port","taverne"],"city":["port","taverne"]},
-		{"num":7, "name":"tztz", "gold":0,"job":"architecte","hand":["port","taverne"],"city":["port","taverne"]},
-		{"num":8, "name":"Obiwan", "gold":3,"job":"condotiere","hand":["port","taverne"],"city":["port","taverne"]}];
 	
+	$scope.getPlayersURL="/players/1";
+	$scope.killURL="/kill/1/";
+	$scope.stoleURL="/stole/1/";
 	
+	$scope.otherPlayers = [];
 	
-	$scope.toto = function() {
-		$http({method: 'GET', url: $scope.url}).
-			success(function(data, status, headers, config) {
-				$scope.status = status;
-				$scope.data = data;
-				$scope.headers = headers;
-				$scope.config = config;
-				
-				$scope.player = data;
+	$scope.getPlayers = function() {
+		$http({method: 'GET', url: $scope.getPlayersURL}).
+			success(function(data, status, headers, config) {			
+				$scope.player = data[0];
+				for (var i = 1; i < data.length; i++) {
+				    $scope.otherPlayers.push(data[i]);
+				}
 			}).
 			error(function(data, status, headers, config) {
-				$scope.status = status;
-				$scope.data = data || "Erreur";
-				$scope.headers = headers;
-				$scope.config = config;
+				// TODO msg d'erreur
 			});
 	};
 
-	$scope.player = $scope.toto();
+	$scope.player = $scope.getPlayers();
+	
+	$scope.kill = function() {
+		$http({method: 'POST', url: $scope.killURL + $scope.selected}).
+		success(function(data, status, headers, config) {
+			$scope.getPlayers();
+		}).
+		error(function(data, status, headers, config) {
+			alert("KO");
+			// TODO msg d'erreur
+		});
+		
+	}
+	
+	$scope.stole = function() {
+		$http({method: 'POST', url: $scope.stoleURL + $scope.selected}).
+		success(function(data, status, headers, config) {
+			$scope.getPlayers();
+		}).
+		error(function(data, status, headers, config) {
+			alert("KO");
+			// TODO msg d'erreur
+		});
+	}
 	
 }
