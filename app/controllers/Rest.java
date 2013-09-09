@@ -39,11 +39,13 @@ public class Rest extends Controller {
 		 return ok(Json.toJson(result));
 	 }
 
+	 /** Kill action */
 	 public static Result kill(String gameId, String job) {
 		 Game.kill(gameId, job);
 		 return ok();
 	 }
 	 
+	 /** Stole action */
 	 public static Result stole(String gameId, String job) {
 		 Game.stole(gameId, job);
 		 return ok();
@@ -52,6 +54,6 @@ public class Rest extends Controller {
 	 /** Init redis database */
 	 public static Result initRedis() {
 		 GameAdmin.initGameDatas();
-		 return ok(Json.toJson("OK"));
+		 return ok();
 	 }
 }
