@@ -8,11 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableMap;
-
+import redis.clients.jedis.Response;
+import redis.clients.jedis.Transaction;
 import citadelles.domain.Job;
 import citadelles.domain.Player;
-import citadelles.domain.Power;
+
+import com.google.common.collect.ImmutableMap;
 
 /**
  * Game mechanics.
@@ -39,6 +40,8 @@ public class Game {
 			player.job = Job.valueOf(playerMap.get("job").toUpperCase());
 			player.score = score(gameId, playerId);
 			player.city = new ArrayList<String>(JEDIS.get().smembers(key("city",gameId,playerId)));
+			player.hand = new ArrayList<String>(JEDIS.get().lrange(key("hand",gameId,playerId), 0, -1));
+			player.partialDraw = new ArrayList<String>(JEDIS.get().lrange(key("partialDraw",gameId,playerId), 0, -1));
 		}		
 		return player;
 	}
@@ -87,11 +90,17 @@ public class Game {
 	 * @param gameId the game id
 	 * @param job the person job
 	 */
-	public static void kill(String gameId, String job) {
-		String playerId = JEDIS.get().get(key("job",gameId,job));
-		if(playerId != null) {
-			JEDIS.get().hmset(key("player",gameId,playerId), ImmutableMap.of("isAlive","0"));
+	public static void kill(String gameId, String job, String playerId) {
+		String assassinId = JEDIS.get().hget(key("job",gameId,"ASSASSIN"), "who");
+		Boolean canKill = Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"ASSASSIN"), "kill"));
+		if(canKill && playerId.equals(assassinId)) {
+			JEDIS.get().hset(key("job",gameId,"ASSASSIN"), "kill", "0");
+			String victimId = JEDIS.get().get(key("job",gameId,job));
+			if(victimId != null) {
+				JEDIS.get().hmset(key("player",gameId,victimId), ImmutableMap.of("isAlive","0"));
+			}
 		}
+
 	}
 	
 	/**
@@ -99,13 +108,84 @@ public class Game {
 	 * @param gameId the game id
 	 * @param job the person job
 	 */
-	public static void stole(String gameId, String job) {
-		String playerId = JEDIS.get().get(key("job",gameId,job));
-		if(playerId != null) {
-			JEDIS.get().hmset(key("player",gameId,playerId), ImmutableMap.of("isStolen","1"));
-		}
+	public static void stole(String gameId, String job, String playerId) {
+		String thiefId = JEDIS.get().hget(key("job",gameId,"THIEF"), "who");
+		Boolean canStole = Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"THIEF"), "stole"));
+		if(canStole && playerId.equals(thiefId)) {
+			JEDIS.get().hset(key("job",gameId,"THIEF"), "stole", "0");
+			String victimId = JEDIS.get().get(key("job",gameId,job));
+			if(victimId != null) {
+				JEDIS.get().hmset(key("player",gameId,victimId), ImmutableMap.of("isStolen","1"));
+			}
+		}	
 	}
 	
+	/** Take gold */
+	public static void takeGold(String gameId, String playerId) {
+		if(Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"KING"), "goldOrCard"))) {
+			JEDIS.get().hset(key("job",gameId,"KING"), "goldOrCard", "0");
+			if("TRADER".equals(JEDIS.get().hget(key("player",gameId,playerId), "job"))) {
+				incrGold(gameId, playerId, 3L);
+			} else {
+				incrGold(gameId, playerId, 3L);
+			}
+		}
+
+	}
+	
+	/** Increment gold value. */
+	public static void incrGold(String gameId, String playerId, Long value) {
+	    JEDIS.get().hincrBy(key("player", gameId, playerId), "gold", value);
+	}
+	
+	/** tax district */
+	public static void tax(String gameId, String playerId) {
+		String jobName = JEDIS.get().hget(key("player",gameId,playerId), "job");
+		Job job = Job.valueOf(jobName);
+		switch (job) {
+			case KING :
+				if(Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"KING"), "tax"))) {
+					JEDIS.get().hset(key("job",gameId,"KING"), "tax", "0");
+					incrGold(gameId,playerId,getNbDistrict(gameId, playerId, "lordy"));
+				}
+				break;
+			
+			case TRADER :
+				if(Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"TRADER"), "tax"))){
+					JEDIS.get().hset(key("job",gameId,"KING"), "tax", "0");
+					incrGold(gameId,playerId,getNbDistrict(gameId, playerId, "shop"));
+				}
+				break;
+				
+			case BISHOP :
+				if(Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"BISHOP"), "tax"))){
+					JEDIS.get().hset(key("job",gameId,"KING"), "tax", "0");
+					incrGold(gameId,playerId,getNbDistrict(gameId, playerId, "sacred"));
+				}
+				break;
+				
+			case WARLORD :
+				if(Boolean.valueOf(JEDIS.get().hget(key("job",gameId,"WARLORD"), "tax"))){
+					JEDIS.get().hset(key("job",gameId,"KING"), "tax", "0");
+					incrGold(gameId,playerId,getNbDistrict(gameId, playerId, "military"));
+				}
+				break;
+		}
+			
+	}
+	
+	/** Get nb district for a type. */
+	private static Long getNbDistrict(String gameId, String playerId, String type) {
+		Long result = 0L;
+		Set<String> city = JEDIS.get().smembers(key("city",gameId,playerId));
+        for (String districtKey : city) {
+        	if(type.equals(JEDIS.get().hget(key("district",districtKey), "t"))) {
+        		result++;
+        	}
+
+        }
+        return result;
+	}
 	
 //	/**
 //	 * Draw a card for a player.
@@ -117,10 +197,7 @@ public class Game {
 //    	JEDIS.get().rpoplpush(key("pile",gameId), key("pile",gameId,playerId));
 //    }
 //    
-//	   /** Increment gold value. */
-//    public static Long incrGold(String gameId, String playerId, Long value) {
-//        return JEDIS.get().hincrBy(key(gameId, playerId), "gold", value);
-//    }
+
 //    
 //    // TODO LUA script
 //    public void construct(String gameId, String playerId, String districtKey) { 
@@ -147,152 +224,21 @@ public class Game {
 //
 //    
 //
-//    
-//    public Boolean choosePartialDraw(String gameId, String playerId, String districtKey) {
-//        Transaction t = JEDIS.get().multi();
-//        Response<List<String>> result = t.lrange(key(gameId,playerId,"pile"), 0, -1);
-//        t.del(key(gameId,playerId,"pile"));
-//        t.exec();
-//        for(String key : result.get()) {
-//            if(key.equals(districtKey)) {
-//            	JEDIS.get().zincrby(key(gameId,playerId,"hand"),1,key);
-//                return true;
-//            }
-//        }
-//        JEDIS.get().lpush(key(gameId,playerId,"pile"), (String[]) result.get().toArray());
-//        return false;
-//    }
-//    
-
     
-//    public Game(List<Player> players, List<District> pile) {
-//    	Jedis jedis = new Jedis("localhost");
-//        this.players = new ArrayList<Player>(players);
-//        this.pile = new ArrayList<District>(pile);
-//        this.availableJob = EnumSet.allOf(Job.class);
-//    }
-	
-//    public void initTurn() {
-//        this.availableJob = EnumSet.allOf(Job.class);
-//        for(int i=0; i<=players.size(); i++) {
-//            if(players.get(i).isFirst) {
-//                firstPlayer = i;
-//                activePlayer = i;
-//                break;
-//            }
-//        }
-//    }
-    
-    
-    public void takeJob(Player player, Job job) {
-//        if(!availableJob.contains(job)) return;
-//        player.init();
-//        player.job = job;
-//        switch (job) {
-//            case ASSASSIN:
-//                player.canBeKill = false;
-//                player.canBeStolen = false;
-//                break;
-//            case THIEF:
-//                player.canBeStolen = false;
-//                break;
-//            case KING:
-//                player.isFirst = true;
-//                break;
-//            case BISHOP:
-//                player.canBeDestroy = false;
-//                break;
-//            case WARLORD:
-//                player.canBeDestroy = false;
-//                break;
-//        }
-//        
-//        if(activePlayer >= players.size()) {
-//            activePlayer = 0;
-//        } else {
-//            activePlayer++;
-//        }
-//        availableJob.remove(job);
+    public Boolean choosePartialDraw(String gameId, String playerId, String districtKey) {
+        Transaction t = JEDIS.get().multi();
+        Response<List<String>> result = t.lrange(key(gameId,playerId,"pile"), 0, -1);
+        t.del(key(gameId,playerId,"pile"));
+        t.exec();
+        for(String key : result.get()) {
+            if(key.equals(districtKey)) {
+            	JEDIS.get().zincrby(key(gameId,playerId,"hand"),1,key);
+                return true;
+            }
+        }
+        JEDIS.get().lpush(key(gameId,playerId,"pile"), (String[]) result.get().toArray());
+        return false;
     }
-
-    public void playAbility(Power power, Player player, Player target, String targetDistrict) {
-//        if (!player.powers.contains(power)) return;
-//        switch (power) {
-//            case ASSASSIN_KILL:
-//                if (target.canBeKill) {
-//                    target.isAlive = false;
-//                    player.powers.remove(power);
-//                }
-//                break;
-//            case THIEF_STOLE:
-//                if (target.canBeStolen) {
-//                    target.isStolen = true;
-//                    player.powers.remove(power);
-//                }
-//                break;
-//            case WIZARD_SWITCH:
-//                Integer cardsSize = player.cards.size();
-//                player.cards.clear();
-//                for (int i = 0; i < cardsSize; i++) {
-//                    player.cards.add(pile.get(0));
-//                    pile.remove(0);
-//                }
-//                player.powers.remove(power);
-//                break;
-//            case WIZARD_STOLE:
-//                Set<District> switchDistrict = new HashSet<District>(target.cards);
-//                target.cards = new HashSet<District>(player.cards);
-//                player.cards = switchDistrict;
-//                player.powers.clear();
-//                break;
-//            case KING_HARVEST:
-//                for (District district : player.city) {
-//                    if (LORDLY.equals(district.type)) {
-//                        player.gold++;
-//                    }
-//                }
-//                player.powers.remove(power);
-//                break;
-//            case BISHOP_HARVEST:
-//                for (District district : player.city) {
-//                    if (SACRED.equals(district.type)) {
-//                        player.gold++;
-//                    }
-//                }
-//                player.powers.remove(power);
-//                break;
-//            case TRADER_HARVEST:
-//                for (District district : player.city) {
-//                    if (SHOP.equals(district.type)) {
-//                        player.gold++;
-//                    }
-//                }
-//                player.powers.remove(power);
-//                break;
-//            case WARLORD_HARVEST:
-//                for (District district : player.city) {
-//                    if (MILITARY.equals(district.type)) {
-//                        player.gold++;
-//                    }
-//                }
-//                player.powers.remove(power);
-//                break;
-//            case WARLORD_DESTROY:
-//                if (target.canBeDestroy && player.gold >= (targetDistrict.value - 1)) {
-//                    target.city.remove(targetDistrict);
-//                    player.gold -= (targetDistrict.value - 1);
-//                    player.powers.remove(power);
-//                }
-//                break;
-//        }
-    }
-
-//    public Boolean isFinish() {
-//        for(Player player : players) {
-//            if(player.city.size() >= 8) return true;
-//        }
-//        return false;
-//    }
     
-    
+     
 }

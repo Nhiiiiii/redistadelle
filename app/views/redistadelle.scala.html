@@ -33,8 +33,9 @@
 				<div class="panel panel-primary">
 					<div class="panel-heading"><h4>{{player.num}} - {{player.name}} / {{player.job}} / Or {{player.gold}}</h4></div>
 					<div class="panel-body">
-						Main ({{player.hand.length}}) : {{player.hand}}<br>
-						Ville ({{player.city.length}}) : {{player.city}}<br>
+						Main : {{player.hand}}<br>
+						Ville : {{player.city}}<br>
+						Pioche : {{player.partialHand}} <br>
 						<a href="#" class="btn btn-default">Piocher</a> Ou <a href="#" class="btn btn-default">Recolter</a><br>
 						<select ng-model="selected" ng-show="player.job == 'ASSASSIN' || player.job=='THIEF'">
 							<option value="THIEF" ng-show="player.job == 'ASSASSIN'">Voleur</option>

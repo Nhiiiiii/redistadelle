@@ -1,15 +1,23 @@
 HMSET player:1:1 name player1 gold 3 isStolen 0 isAlive 1 job ASSASSIN num 1
 HMSET player:1:2 name player2 gold 4 isStolen 0 isAlive 1 job THIEF num 2
 HMSET player:1:3 name player3 gold 5 isStolen 0 isAlive 1 job WIZARD num 3
-HMSET player:1:4 name player4 gold 6 isStolen 0 isAlive 1 job none num 4
-HMSET player:1:5 name player5 gold 7 isStolen 0 isAlive 1 job none num 5
-HMSET player:1:6 name player6 gold 8 isStolen 0 isAlive 1 job none num 6
-HMSET player:1:7 name player7 gold 9 isStolen 0 isAlive 1 job none num 7
-HMSET player:1:8 name player8 gold 2 isStolen 0 isAlive 1 job none num 8
+HMSET player:1:4 name player4 gold 6 isStolen 0 isAlive 1 job KING num 4
+HMSET player:1:5 name player5 gold 7 isStolen 0 isAlive 1 job BISHOP num 5
+HMSET player:1:6 name player6 gold 8 isStolen 0 isAlive 1 job TRADER num 6
+HMSET player:1:7 name player7 gold 9 isStolen 0 isAlive 1 job ARCHITECT num 7
+HMSET player:1:8 name player8 gold 2 isStolen 0 isAlive 1 job WARLORD num 8
 
-SET job:1:ASSASSIN 1
-SET job:1:THIEF 2
-SET job:3:WIZARD 2
+HMSET job:1:ASSASSIN who 1 kill 1 goldOrCard 1
+HMSET job:1:THIEF who 2 stole 1 goldOrCard 1
+HMSET job:1:WIZARD who 3 power 1 goldOrCard 1
+HMSET job:1:KING who 4 tax 1 goldOrCard 1
+HMSET job:1:BISHOP who 5 tax 1 goldOrCard 1
+HMSET job:1:TRADER who 6 tax 1 goldOrCard 1
+HMSET job:1:ARCHITECT who 7 build 2 goldOrCard 1
+HMSET job:1:WARLORD who 8 tax 1 destroy 1 goldOrCard 1
+
+LPUSH hand:1:1 donjon marche dracoport
+LPUSH partialDraw:1:1 manoir temple
 
 SADD city:1:1 taverne 
 SADD city:1:1 donjon
@@ -21,4 +29,8 @@ SADD city:1:6
 SADD city:1:7
 SADD city:1:7 
 
-http://localhost:9000/player/1/1
+pile:1 taverne manoir etc...
+
+game:1 turn job
+game:1 turn action
+game:1 who playerId

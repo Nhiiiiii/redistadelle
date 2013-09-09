@@ -6,30 +6,35 @@
 ###############
 
 # Auth page
-GET     /                      	controllers.Application.index
-POST    /                       controllers.Application.login
-GET     /logout                 controllers.Application.logout
+GET     /                      		controllers.Application.index
+POST    /                       	controllers.Application.login
+GET     /logout                 	controllers.Application.logout
 
 # Game page
-GET		/redistadelle			controllers.Application.redistadelle
+GET		/redistadelle				controllers.Application.redistadelle
 
 # Admin page
-GET		/admin					controllers.Application.admin
+GET		/admin						controllers.Application.admin
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file           controllers.Assets.at(path="/public", file)
+GET     /assets/*file           	controllers.Assets.at(path="/public", file)
 
 ###############
 # Webservices #
 ###############
 
 # Retrieve player data
-GET		/players/:gameId		controllers.Rest.players(gameId: String)
+GET		/players/:gameId			controllers.Rest.players(gameId: String)
 
 # Player action
-POST	/kill/:gameId/:job		controllers.Rest.kill(gameId: String, job: String)
-POST	/stole/:gameId/:job		controllers.Rest.stole(gameId: String, job: String)
+POST	/kill/:gameId/:job			controllers.Rest.kill(gameId: String, job: String)
+POST	/stole/:gameId/:job			controllers.Rest.stole(gameId: String, job: String)
+POST	/tax/:gameId				controllers.Rest.tax(gameId: String)
+POST	/drawPartial/:gameId		controllers.Rest.draw(gameId: String)
+POST	/drawChoose/:gameId/:card	controllers.Rest.drawChoose(gameId: String, card: Integer)
+POST	/takeGold/:gameId				controllers.Rest.takeGold(gameId: String)
 
 # Admin action
-POST		/initRedis			controllers.Rest.initRedis
+POST		/initRedis				controllers.RestAdmin.initRedis
+POST		/initGame/:gameId   	controllers.RestAdmin.initGame(gameId: String)
 

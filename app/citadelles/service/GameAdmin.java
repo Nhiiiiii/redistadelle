@@ -15,34 +15,30 @@ import com.google.common.collect.ImmutableMap;
 
 public class GameAdmin {
 
-	public static void initPlayer(String gameId, String playerId, String name) {
-		JEDIS.get().hset(key("player", gameId, playerId), "name", name);
-		JEDIS.get().hset(key("player", gameId, playerId), "gold", "4");
-		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
-	}
+//	public static void initPlayer(String gameId, String playerId, String name) {
+//		JEDIS.get().hset(key("player", gameId, playerId), "name", name);
+//		JEDIS.get().hset(key("player", gameId, playerId), "gold", "4");
+//		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
+//		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
+//	}
+//
+//	public static void initPlayerTurn(String gameId, String playerId) {
+//		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
+//		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
+//	}
+//
 
-	public static void initPlayerTurn(String gameId, String playerId) {
-		JEDIS.get().hset(key("player", gameId, playerId), "isAlive", "1");
-		JEDIS.get().hset(key("player", gameId, playerId), "isStolen", "0");
-	}
-
+	
 	public static void initGame(String gameId) {
 		JEDIS.get().hset(key("game",gameId), "turn", "0");
 		createPile(gameId);
-		setPlayerOrder(gameId);
+//		setPlayerOrder(gameId);
 	}
 
-	public static void setPlayerOrder(String gameId) {
-		String turn = JEDIS.get().hget(key("game",gameId), "turn");
-		Set<String> players = JEDIS.get().keys(key("player",gameId,"*"));
-		for (String playerId : players) {
-			JEDIS.get().lpush(key("order", gameId), playerId);
-		}
-	}
 	
 	/** Create a pile for a game. */
-	public static void createPile(String gameId){
+	private static void createPile(String gameId){
+		JEDIS.get().del(key("pile",gameId));
 		List<String> gameDeck = new ArrayList<String>();
 		Set<Tuple> deck = JEDIS.get().zrangeWithScores("deck", 0, -1);
 		for (Tuple tuple : deck) {
@@ -51,17 +47,28 @@ public class GameAdmin {
 			}
 		}
 		Collections.shuffle(gameDeck);
-		for(String value :gameDeck){
-			JEDIS.get().lpush(key("pile",gameId),value);
+		for(String card: gameDeck) {
+			JEDIS.get().lpush(key("pile",gameId), card);
 		}
 	}
+	
+	private static void setPlayerOrder(String gameId) {
+		String turn = JEDIS.get().hget(key("game",gameId), "turn");
+		Set<String> players = JEDIS.get().keys(key("player",gameId,"*"));
+		for (String playerId : players) {
+			JEDIS.get().lpush(key("order", gameId), playerId);
+		}
+	}
+	
+	/**
+	 * Init game data (district description, deck etc ...).
+	 */
 	public static void initGameDatas() {
-		JEDIS.get().flushAll();
 		initDistricts();
 		initDeck();
-		initJobs();
 	}
 
+	/** Init district description in redis db. */
 	private static void initDistricts() {
 		// Religieux
 		Map<String, String> temple = ImmutableMap.of("g", "1", "vp", "1", "t", "sacred");
@@ -128,6 +135,7 @@ public class GameAdmin {
 		JEDIS.get().hmset(key("district", "dracoport"), dracoport);
 	}
 
+	/** Init deck description in redis db */
 	private static void initDeck() {
 		JEDIS.get().del("deck");
 		JEDIS.get().zadd("deck", new Double(3), "temple");
@@ -159,17 +167,6 @@ public class GameAdmin {
 		JEDIS.get().zadd("deck", new Double(1), "dracoport");
 	}
 
-	private static void initJobs() {
-		JEDIS.get().del("job");
-		JEDIS.get().zadd("job", new Double(1), "assassin");
-		JEDIS.get().zadd("job", new Double(2), "thief");
-		JEDIS.get().zadd("job", new Double(3), "wizard");
-		JEDIS.get().zadd("job", new Double(4), "king");
-		JEDIS.get().zadd("job", new Double(5), "bishop");
-		JEDIS.get().zadd("job", new Double(6), "trader");
-		JEDIS.get().zadd("job", new Double(7), "architect");
-		JEDIS.get().zadd("job", new Double(8), "warlord");
-		JEDIS.get().zadd("job", new Double(8), "none");
-	}
+
 
 }

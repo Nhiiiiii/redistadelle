@@ -11,6 +11,7 @@ public class Player {
     public Job job;
     public List<String> hand;
     public List<String> city;
+    public List<String> partialDraw;
     public Long score;
     public Boolean isAlive;
     public Boolean isStolen;
